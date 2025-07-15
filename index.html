@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autolatina Truck Service - Controle de Brindes</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --azul-escuro: #003366;
+            --laranja: #FF6600;
+            --laranja-claro: #FF8C42;
+            --branco: #FFFFFF;
+            --cinza-claro: #F5F5F5;
+            --cinza-escuro: #333333;
+            --vermelho: #FF3333;
+            --verde: #2ECC71;
+        }
+        
+        body {
+            font-family: 'Montserrat', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--cinza-claro);
+            color: var(--cinza-escuro);
+            line-height: 1.6;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--azul-escuro), #004080);
+            color: var(--branco);
+            padding: 25px 0;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .logo-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+        
+        
+        .logo {
+            font-size: 2.8rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .internal-use {
+            background-color: var(--laranja);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            margin-top: 15px;
+            display: inline-block;
+        }
+        
+        .stats-container {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+        
+        .stat-box {
+            background-color: var(--branco);
+            border-radius: 15px;
+            padding: 20px 30px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            min-width: 220px;
+            transition: transform 0.3s, box-shadow 0.3s;
+            border-top: 5px solid;
+        }
+        
+        .stat-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        .stat-box.available {
+            border-color: var(--verde);
+        }
+        
+        .stat-box.delivered {
+            border-color: var(--vermelho);
+        }
+        
+        .stat-number {
+            font-size: 2.8rem;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .available .stat-number {
+            color: var(--verde);
+        }
+        
+        .delivered .stat-number {
+            color: var(--vermelho);
+        }
+        
+        .stat-label {
+            font-size: 1.1rem;
+            color: var(--cinza-escuro);
+            font-weight: 600;
+        }
+        
+        .container {
+            max-width: 1100px;
+            margin: 40px auto;
+            padding: 0 25px;
+        }
+        
+        .form-container {
+            background-color: var(--branco);
+            border-radius: 15px;
+            padding: 35px;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+            border-left: 5px solid var(--laranja);
+        }
+        
+        h2 {
+            color: var(--azul-escuro);
+            margin-top: 0;
+            padding-bottom: 10px;
+            position: relative;
+            font-size: 1.8rem;
+        }
+        
+        h2::after {
+            content: '';
+            position: absolute;
+            width: 80px;
+            height: 4px;
+            background: var(--laranja);
+            bottom: 0;
+            left: 0;
+            border-radius: 2px;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: var(--azul-escuro);
+            font-size: 1.05rem;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s;
+            box-sizing: border-box;
+        }
+        
+        input:focus, select:focus {
+            border-color: var(--laranja);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(255, 102, 0, 0.2);
+        }
+        
+        button {
+            background-color: var(--laranja);
+            color: var(--branco);
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        button:hover {
+            background-color: var(--laranja-claro);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 102, 0, 0.3);
+        }
+        
+        .records-container {
+            margin-top: 50px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 25px;
+            background-color: var(--branco);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+            border-radius: 15px;
+            overflow: hidden;
+        }
+        
+        th, td {
+            padding: 18px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        th {
+            background-color: var(--azul-escuro);
+            color: var(--branco);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #fafafa;
+        }
+        
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+        
+        td:last-child {
+            font-weight: 500;
+            color: var(--azul-escuro);
+        }
+        
+        footer {
+            background: linear-gradient(135deg, var(--azul-escuro), #002244);
+            color: var(--branco);
+            text-align: center;
+            padding: 25px 0;
+            margin-top: 70px;
+            font-size: 1.05rem;
+        }
+        
+        .footer-content {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        
+        .developer {
+            color: var(--vermelho);
+            font-weight: bold;
+        }
+        
+        @media (max-width: 768px) {
+            .logo-container {
+                flex-direction: column;
+            }
+            
+            .truck-icon {
+                font-size: 2.2rem;
+            }
+            
+            .logo {
+                font-size: 2.2rem;
+            }
+            
+            .stats-container {
+                flex-direction: column;
+                align-items: center;
+                gap: 20px;
+            }
+            
+            .stat-box {
+                width: 100%;
+                padding: 15px 20px;
+            }
+            
+            .stat-number {
+                font-size: 2.2rem;
+            }
+            
+            .container {
+                padding: 0 15px;
+            }
+            
+            .form-container {
+                padding: 25px;
+            }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <div class="logo-container">
+            <i class="fas fa-truck truck-icon" style="transform: scaleX(-1);"></i>
+            <div>
+                <div class="logo">Autolatina Truck Service</div>
+                <div class="internal-use">Site feito para uso interno da Autolatina - NÃO REPASSE</div>
+            </div>
+            <i class="fas fa-truck truck-icon"></i>
+        </div>
+    </header>
+    
+    <div class="stats-container">
+        <div class="stat-box available">
+            <div class="stat-label">Bolsas Disponíveis</div>
+            <div class="stat-number" id="available-bags">100</div>
+            <i class="fas fa-box-open" style="color: var(--verde); font-size: 1.5rem;"></i>
+        </div>
+        <div class="stat-box delivered">
+            <div class="stat-label">Bolsas Entregues</div>
+            <div class="stat-number" id="delivered-bags">0</div>
+            <i class="fas fa-truck" style="color: var(--vermelho); font-size: 1.5rem;"></i>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="form-container">
+            <h2><i class="fas fa-gift" style="color: var(--laranja); margin-right: 10px;"></i>Registrar Entrega de Brinde</h2>
+            <form id="gift-form">
+                <div class="form-group">
+                    <label for="seller"><i class="fas fa-user-tie" style="color: var(--laranja); margin-right: 8px;"></i> Vendedor</label>
+                    <select id="seller" required>
+                        <option value="">Selecione o vendedor</option>
+                        <option value="Felipe">Felipe</option>
+                        <option value="João Amorim">João Amorim</option>
+                        <option value="Vitor Batista">Vitor Batista</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="client"><i class="fas fa-user" style="color: var(--laranja); margin-right: 8px;"></i> Cliente</label>
+                    <input type="text" id="client" placeholder="Nome do cliente" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="product"><i class="fas fa-shopping-cart" style="color: var(--laranja); margin-right: 8px;"></i> Produto Comprado</label>
+                    <input type="text" id="product" placeholder="Produto que o cliente comprou" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="quantity"><i class="fas fa-bags-shopping" style="color: var(--laranja); margin-right: 8px;"></i> Quantidade de Bolsas</label>
+                    <input type="number" id="quantity" min="1" value="1" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="date"><i class="fas fa-calendar" style="color: var(--laranja); margin-right: 8px;"></i> Data da Entrega</label>
+                    <input type="date" id="date" required>
+                </div>
+                
+                <button type="submit"><i class="fas fa-save"></i> Registrar Entrega</button>
+            </form>
+        </div>
+        
+        <div class="records-container">
+            <h2><i class="fas fa-history" style="color: var(--azul-escuro); margin-right: 10px;"></i>Histórico de Entregas</h2>
+            <div style="overflow-x: auto;">
+                <table id="records-table">
+                    <thead>
+                        <tr>
+                            <th><i class="fas fa-user-tie"></i> Vendedor</th>
+                            <th><i class="fas fa-user"></i> Cliente</th>
+                            <th><i class="fas fa-box-open"></i> Produto</th>
+                            <th><i class="fas fa-bag-shopping"></i> Bolsas</th>
+                            <th><i class="fas fa-calendar"></i> Data</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Os registros serão inseridos aqui via JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <div class="footer-content">
+            <div style="margin-bottom: 10px;">Copyright © 2025 Autolatina Truck Service</div>
+            <div>Desenvolvido por <span class="developer">POKAN</span></div>
+        </div>
+    </footer>
+    
+    <script>
+        // Variáveis globais
+        let availableBags = 100;
+        let deliveredBags = 0;
+        let records = [];
+        
+        // Elementos do DOM
+        const form = document.getElementById('gift-form');
+        const availableBagsElement = document.getElementById('available-bags');
+        const deliveredBagsElement = document.getElementById('delivered-bags');
+        const recordsTable = document.getElementById('records-table').getElementsByTagName('tbody')[0];
+        
+        // Função para formatar a data
+        function formatDate(dateString) {
+            const options = { day: 'numeric', month: 'long', year: 'numeric' };
+            const date = new Date(dateString);
+            return date.toLocaleDateString('pt-BR', options);
+        }
+        
+        // Função para atualizar os contadores
+        function updateCounters() {
+            availableBagsElement.textContent = availableBags;
+            deliveredBagsElement.textContent = deliveredBags;
+            
+            // Efeito visual quando atualiza
+            if (availableBags < parseInt(availableBagsElement.dataset.prev || 100)) {
+                availableBagsElement.style.transform = 'scale(1.1)';
+                setTimeout(() => {
+                    availableBagsElement.style.transform = 'scale(1)';
+                }, 300);
+            }
+            
+            if (deliveredBags > parseInt(deliveredBagsElement.dataset.prev || 0)) {
+                deliveredBagsElement.style.transform = 'scale(1.1)';
+                setTimeout(() => {
+                    deliveredBagsElement.style.transform = 'scale(1)';
+                }, 300);
+            }
+            
+            availableBagsElement.dataset.prev = availableBags;
+            deliveredBagsElement.dataset.prev = deliveredBags;
+        }
+        
+        // Função para adicionar um novo registro
+        function addRecord(seller, client, product, quantity, date) {
+            const formattedDate = formatDate(date);
+            
+            // Adicionar ao array de registros
+            records.unshift({
+                seller,
+                client,
+                product,
+                quantity,
+                date: formattedDate
+            });
+            
+            // Atualizar contadores
+            availableBags -= quantity;
+            deliveredBags += quantity;
+            updateCounters();
+            
+            // Atualizar a tabela
+            updateTable();
+            
+            // Salvar no localStorage
+            saveData();
+            
+            // Mostrar confirmação
+            showNotification('Entrega registrada com sucesso!', 'success');
+        }
+        
+        // Função para atualizar a tabela
+        function updateTable() {
+            // Limpar a tabela
+            recordsTable.innerHTML = '';
+            
+            // Adicionar cada registro
+            records.forEach(record => {
+                const row = recordsTable.insertRow();
+                
+                const sellerCell = row.insertCell(0);
+                sellerCell.innerHTML = `<strong>${record.seller}</strong>`;
+                
+                const clientCell = row.insertCell(1);
+                clientCell.textContent = record.client;
+                
+                const productCell = row.insertCell(2);
+                productCell.textContent = record.product;
+                
+                const quantityCell = row.insertCell(3);
+                quantityCell.innerHTML = `<span style="font-weight: bold; color: var(--vermelho);">${record.quantity}</span>`;
+                
+                const dateCell = row.insertCell(4);
+                dateCell.textContent = record.date;
+            });
+        }
+        
+        // Função para mostrar notificação
+        function showNotification(message, type) {
+            const notification = document.createElement('div');
+            notification.style.position = 'fixed';
+            notification.style.bottom = '20px';
+            notification.style.right = '20px';
+            notification.style.padding = '15px 25px';
+            notification.style.backgroundColor = type === 'success' ? 'var(--verde)' : 'var(--vermelho)';
+            notification.style.color = 'white';
+            notification.style.borderRadius = '8px';
+            notification.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+            notification.style.zIndex = '1000';
+            notification.style.animation = 'fadeIn 0.3s';
+            notification.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}" style="margin-right: 10px;"></i> ${message}`;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'fadeOut 0.3s';
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+        
+        // Função para salvar os dados no localStorage
+        function saveData() {
+            const data = {
+                availableBags,
+                deliveredBags,
+                records
+            };
+            localStorage.setItem('autolatinaGiftData', JSON.stringify(data));
+        }
+        
+        // Função para carregar os dados do localStorage
+        function loadData() {
+            const savedData = localStorage.getItem('autolatinaGiftData');
+            if (savedData) {
+                const data = JSON.parse(savedData);
+                availableBags = data.availableBags;
+                deliveredBags = data.deliveredBags;
+                records = data.records || [];
+                
+                updateCounters();
+                updateTable();
+            }
+        }
+        
+        // Evento de submit do formulário
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const seller = document.getElementById('seller').value;
+            const client = document.getElementById('client').value;
+            const product = document.getElementById('product').value;
+            const quantity = parseInt(document.getElementById('quantity').value);
+            const date = document.getElementById('date').value;
+            
+            // Validar quantidade disponível
+            if (quantity > availableBags) {
+                showNotification(`Não há bolsas suficientes! Disponível: ${availableBags}`, 'error');
+                return;
+            }
+            
+            if (quantity <= 0) {
+                showNotification('A quantidade deve ser maior que zero!', 'error');
+                return;
+            }
+            
+            // Adicionar o registro
+            addRecord(seller, client, product, quantity, date);
+            
+            // Limpar o formulário
+            form.reset();
+            document.getElementById('quantity').value = 1;
+            document.getElementById('date').valueAsDate = new Date();
+        });
+        
+        // Definir a data atual como padrão
+        document.getElementById('date').valueAsDate = new Date();
+        
+        // Carregar dados salvos ao iniciar
+        loadData();
+        
+        // Adicionar estilo para animações
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeIn {
+                from { opacity: 0; transform: translateY(20px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+            @keyframes fadeOut {
+                from { opacity: 1; transform: translateY(0); }
+                to { opacity: 0; transform: translateY(20px); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
