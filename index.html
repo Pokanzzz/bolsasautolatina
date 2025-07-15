@@ -174,6 +174,12 @@
             box-shadow: 0 0 0 3px rgba(255, 102, 0, 0.2);
         }
         
+        .date-hint {
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 5px;
+        }
+        
         button {
             background-color: var(--laranja);
             color: var(--branco);
@@ -345,7 +351,8 @@
                 
                 <div class="form-group">
                     <label for="date"><i class="fas fa-calendar" style="color: var(--laranja); margin-right: 8px;"></i> Data da Entrega</label>
-                    <input type="date" id="date" required>
+                    <input type="text" id="date" placeholder="DD/MM/AAAA (ex: 15/07/2025)" required>
+                    <div class="date-hint">Formato: DD/MM/AAAA (ex: 15/07/2025)</div>
                 </div>
                 
                 <button type="submit"><i class="fas fa-save"></i> Registrar Entrega</button>
@@ -392,11 +399,36 @@
         const deliveredBagsElement = document.getElementById('delivered-bags');
         const recordsTable = document.getElementById('records-table').getElementsByTagName('tbody')[0];
         
-        // Função para formatar a data
-        function formatDate(dateString) {
-            const options = { day: 'numeric', month: 'long', year: 'numeric' };
-            const date = new Date(dateString);
-            return date.toLocaleDateString('pt-BR', options);
+        // Função para validar o formato da data (DD/MM/AAAA)
+        function isValidDate(dateString) {
+            const regex = /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/([12][0-9]{3})$/;
+            if (!regex.test(dateString)) return false;
+            
+            const parts = dateString.split('/');
+            const day = parseInt(parts[0], 10);
+            const month = parseInt(parts[1], 10);
+            const year = parseInt(parts[2], 10);
+            
+            // Verificar se a data é válida
+            const date = new Date(year, month - 1, day);
+            return date.getFullYear() === year && 
+                   date.getMonth() === month - 1 && 
+                   date.getDate() === day;
+        }
+        
+        // Função para formatar a data para exibição
+        function formatDateForDisplay(dateString) {
+            if (!isValidDate(dateString)) return dateString; // Retorna como está se não for válido
+            
+            const parts = dateString.split('/');
+            const day = parts[0];
+            const month = parts[1];
+            const year = parts[2];
+            
+            const monthNames = ["janeiro", "fevereiro", "março", "abril", "maio", "junho",
+                              "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
+            
+            return `${day} de ${monthNames[parseInt(month) - 1]} de ${year}`;
         }
         
         // Função para atualizar os contadores
@@ -425,7 +457,7 @@
         
         // Função para adicionar um novo registro
         function addRecord(seller, client, product, quantity, date) {
-            const formattedDate = formatDate(date);
+            const formattedDate = formatDateForDisplay(date);
             
             // Adicionar ao array de registros
             records.unshift({
@@ -433,7 +465,8 @@
                 client,
                 product,
                 quantity,
-                date: formattedDate
+                date: formattedDate,
+                rawDate: date // Mantemos a data original para ordenação
             });
             
             // Atualizar contadores
@@ -455,6 +488,13 @@
         function updateTable() {
             // Limpar a tabela
             recordsTable.innerHTML = '';
+            
+            // Ordenar registros por data (mais recente primeiro)
+            records.sort((a, b) => {
+                const dateA = a.rawDate.split('/').reverse().join('-');
+                const dateB = b.rawDate.split('/').reverse().join('-');
+                return new Date(dateB) - new Date(dateA);
+            });
             
             // Adicionar cada registro
             records.forEach(record => {
@@ -534,7 +574,7 @@
             const client = document.getElementById('client').value;
             const product = document.getElementById('product').value;
             const quantity = parseInt(document.getElementById('quantity').value);
-            const date = document.getElementById('date').value;
+            const date = document.getElementById('date').value.trim();
             
             // Validar quantidade disponível
             if (quantity > availableBags) {
@@ -547,17 +587,19 @@
                 return;
             }
             
+            // Validar formato da data
+            if (!isValidDate(date)) {
+                showNotification('Formato de data inválido! Use DD/MM/AAAA (ex: 15/07/2025)', 'error');
+                return;
+            }
+            
             // Adicionar o registro
             addRecord(seller, client, product, quantity, date);
             
             // Limpar o formulário
             form.reset();
             document.getElementById('quantity').value = 1;
-            document.getElementById('date').valueAsDate = new Date();
         });
-        
-        // Definir a data atual como padrão
-        document.getElementById('date').valueAsDate = new Date();
         
         // Carregar dados salvos ao iniciar
         loadData();
