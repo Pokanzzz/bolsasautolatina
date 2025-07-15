@@ -387,7 +387,25 @@
         </div>
     </footer>
     
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
+    
     <script>
+        // 🔥 Configuração do Firebase (SUBSTITUA com suas credenciais)
+        const firebaseConfig = {
+     apiKey: "AIzaSyC1BvwjRdD5IdgWh3nPThfC7fk3KNmOuNA",
+     authDomain: "autolatina-brindes.firebaseapp.com",
+     projectId: "autolatina-brindes",
+     storageBucket: "autolatina-brindes.firebasestorage.app",
+     messagingSenderId: "274394201823",
+     appId: "1:274394201823:web:f3a714ed896002775a736a"
+   };
+
+        // Inicializa o Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
         // Variáveis globais
         let availableBags = 100;
         let deliveredBags = 0;
@@ -399,7 +417,7 @@
         const deliveredBagsElement = document.getElementById('delivered-bags');
         const recordsTable = document.getElementById('records-table').getElementsByTagName('tbody')[0];
         
-        // Função para validar o formato da data (DD/MM/AAAA)
+        // Funções auxiliares
         function isValidDate(dateString) {
             const regex = /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/([12][0-9]{3})$/;
             if (!regex.test(dateString)) return false;
@@ -409,16 +427,14 @@
             const month = parseInt(parts[1], 10);
             const year = parseInt(parts[2], 10);
             
-            // Verificar se a data é válida
             const date = new Date(year, month - 1, day);
             return date.getFullYear() === year && 
                    date.getMonth() === month - 1 && 
                    date.getDate() === day;
         }
         
-        // Função para formatar a data para exibição
         function formatDateForDisplay(dateString) {
-            if (!isValidDate(dateString)) return dateString; // Retorna como está se não for válido
+            if (!isValidDate(dateString)) return dateString;
             
             const parts = dateString.split('/');
             const day = parts[0];
@@ -431,12 +447,10 @@
             return `${day} de ${monthNames[parseInt(month) - 1]} de ${year}`;
         }
         
-        // Função para atualizar os contadores
         function updateCounters() {
             availableBagsElement.textContent = availableBags;
             deliveredBagsElement.textContent = deliveredBags;
             
-            // Efeito visual quando atualiza
             if (availableBags < parseInt(availableBagsElement.dataset.prev || 100)) {
                 availableBagsElement.style.transform = 'scale(1.1)';
                 setTimeout(() => {
@@ -455,48 +469,9 @@
             deliveredBagsElement.dataset.prev = deliveredBags;
         }
         
-        // Função para adicionar um novo registro
-        function addRecord(seller, client, product, quantity, date) {
-            const formattedDate = formatDateForDisplay(date);
-            
-            // Adicionar ao array de registros
-            records.unshift({
-                seller,
-                client,
-                product,
-                quantity,
-                date: formattedDate,
-                rawDate: date // Mantemos a data original para ordenação
-            });
-            
-            // Atualizar contadores
-            availableBags -= quantity;
-            deliveredBags += quantity;
-            updateCounters();
-            
-            // Atualizar a tabela
-            updateTable();
-            
-            // Salvar no localStorage
-            saveData();
-            
-            // Mostrar confirmação
-            showNotification('Entrega registrada com sucesso!', 'success');
-        }
-        
-        // Função para atualizar a tabela
         function updateTable() {
-            // Limpar a tabela
             recordsTable.innerHTML = '';
             
-            // Ordenar registros por data (mais recente primeiro)
-            records.sort((a, b) => {
-                const dateA = a.rawDate.split('/').reverse().join('-');
-                const dateB = b.rawDate.split('/').reverse().join('-');
-                return new Date(dateB) - new Date(dateA);
-            });
-            
-            // Adicionar cada registro
             records.forEach(record => {
                 const row = recordsTable.insertRow();
                 
@@ -517,7 +492,6 @@
             });
         }
         
-        // Função para mostrar notificação
         function showNotification(message, type) {
             const notification = document.createElement('div');
             notification.style.position = 'fixed';
@@ -542,31 +516,72 @@
             }, 3000);
         }
         
-        // Função para salvar os dados no localStorage
-        function saveData() {
-            const data = {
-                availableBags,
-                deliveredBags,
-                records
-            };
-            localStorage.setItem('autolatinaGiftData', JSON.stringify(data));
-        }
-        
-        // Função para carregar os dados do localStorage
-        function loadData() {
-            const savedData = localStorage.getItem('autolatinaGiftData');
-            if (savedData) {
-                const data = JSON.parse(savedData);
-                availableBags = data.availableBags;
-                deliveredBags = data.deliveredBags;
-                records = data.records || [];
+        // Funções do Firestore
+        async function loadData() {
+            try {
+                // Carrega contadores
+                const statsDoc = await db.collection("stats").doc("counters").get();
+                if (statsDoc.exists) {
+                    const data = statsDoc.data();
+                    availableBags = data.availableBags;
+                    deliveredBags = data.deliveredBags;
+                    updateCounters();
+                }
                 
-                updateCounters();
+                // Carrega registros
+                const querySnapshot = await db.collection("records").orderBy("timestamp", "desc").get();
+                records = querySnapshot.docs.map(doc => doc.data());
                 updateTable();
+            } catch (error) {
+                console.error("Erro ao carregar dados:", error);
+                showNotification("Erro ao carregar dados. Recarregue a página.", "error");
             }
         }
         
-        // Evento de submit do formulário
+        async function saveStats() {
+            try {
+                await db.collection("stats").doc("counters").set({
+                    availableBags,
+                    deliveredBags
+                });
+            } catch (error) {
+                console.error("Erro ao salvar estatísticas:", error);
+            }
+        }
+        
+        async function addRecord(seller, client, product, quantity, date) {
+            const formattedDate = formatDateForDisplay(date);
+            
+            try {
+                await db.collection("records").add({
+                    seller,
+                    client,
+                    product,
+                    quantity,
+                    date: formattedDate,
+                    rawDate: date,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                availableBags -= quantity;
+                deliveredBags += quantity;
+                await saveStats();
+
+                records.unshift({
+                    seller, client, product, quantity, 
+                    date: formattedDate, rawDate: date
+                });
+                updateTable();
+
+                showNotification('Entrega registrada com sucesso!', 'success');
+                form.reset();
+            } catch (error) {
+                console.error("Erro ao registrar entrega:", error);
+                showNotification("Erro ao salvar. Tente novamente.", "error");
+            }
+        }
+        
+        // Event Listeners
         form.addEventListener('submit', function(e) {
             e.preventDefault();
             
@@ -576,7 +591,6 @@
             const quantity = parseInt(document.getElementById('quantity').value);
             const date = document.getElementById('date').value.trim();
             
-            // Validar quantidade disponível
             if (quantity > availableBags) {
                 showNotification(`Não há bolsas suficientes! Disponível: ${availableBags}`, 'error');
                 return;
@@ -587,24 +601,18 @@
                 return;
             }
             
-            // Validar formato da data
             if (!isValidDate(date)) {
                 showNotification('Formato de data inválido! Use DD/MM/AAAA (ex: 15/07/2025)', 'error');
                 return;
             }
             
-            // Adicionar o registro
             addRecord(seller, client, product, quantity, date);
-            
-            // Limpar o formulário
-            form.reset();
-            document.getElementById('quantity').value = 1;
         });
         
-        // Carregar dados salvos ao iniciar
-        loadData();
+        // Inicialização
+        document.addEventListener('DOMContentLoaded', loadData);
         
-        // Adicionar estilo para animações
+        // Estilo para animações
         const style = document.createElement('style');
         style.textContent = `
             @keyframes fadeIn {
